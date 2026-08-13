@@ -1,0 +1,2715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAGRANGE FREEPORT // CHRONOLOGY</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0806;
+            --surface: #120e0a;
+            --text: #ff9e3d;
+            --text-dim: #8a5a30;
+            --text-bright: #ffb366;
+            --glow-text: 0 0 4px rgba(255,140,40,0.4), 0 0 12px rgba(255,140,40,0.2);
+            --glow-text-hover: 0 0 6px rgba(255,140,40,0.6), 0 0 16px rgba(255,140,40,0.35);
+            --accent: #ff8c28;
+            --frame: #2a1a0e;
+            --scan: rgba(255,140,40,0.03);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: #3d2612 var(--bg);
+            scroll-behavior: auto;
+        }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #3d2612; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        body {
+            font-family: 'VT323', 'Courier New', monospace;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 20px;
+            line-height: 1.4;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scan) 2px, var(--scan) 4px);
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.7;
+        }
+
+        .terminal {
+            max-width: 80ch;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .divider {
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            margin: 0.5rem 0;
+            letter-spacing: 0;
+        }
+
+        .hl { color: var(--text-bright); text-shadow: var(--glow-text); }
+
+        .header-text {
+            color: var(--text-bright);
+            text-shadow: 0 0 10px rgba(255,140,40,0.5), 0 0 25px rgba(255,140,40,0.2);
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        .header-text a {
+            color: var(--text-bright);
+            text-decoration: none;
+        }
+        .header-text a:hover {
+            text-shadow: 0 0 15px rgba(255,140,40,0.6);
+        }
+
+        .controls-area { margin: 0.75rem 0; }
+        .ctrl-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            margin: 0.25rem 0;
+        }
+        .ctrl-label { color: var(--text-dim); }
+        .ctrl-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--frame);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 1.1rem;
+            outline: none;
+            caret-color: var(--accent);
+            text-shadow: var(--glow-text);
+            width: 240px;
+        }
+        .ctrl-input:focus {
+            border-bottom-color: var(--accent);
+        }
+        .ctrl-select {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--frame);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.1rem;
+            cursor: pointer;
+            outline: none;
+            text-shadow: var(--glow-text);
+        }
+        .ctrl-select:focus { border-bottom-color: var(--accent); }
+        .ctrl-badge { color: var(--text-dim); font-size: 1rem; }
+
+        /* Timeline */
+        .timeline-wrapper {
+            position: relative;
+            padding: 1rem 0;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            z-index: 1;
+            color: #3d2612;
+            font-size: 14px;
+            line-height: 16px;
+            text-align: center;
+            white-space: pre;
+            pointer-events: none;
+        }
+
+        .era-section {
+            position: relative;
+            margin-bottom: 2.5rem;
+        }
+
+        .era-header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 0.3rem 0;
+            background: var(--bg);
+            color: var(--text-bright);
+            text-shadow: 0 0 10px rgba(255,140,40,0.45), 0 0 25px rgba(255,140,40,0.2);
+            font-size: 1.1rem;
+            letter-spacing: 0.15em;
+        }
+
+        /* Event - stepped appearance, no smooth fade */
+        .event {
+            position: relative;
+            margin-bottom: 1.5rem;
+            width: 44%;
+            opacity: 0;
+            cursor: pointer;
+            padding-right: 2rem;
+        }
+        .event.visible {
+            opacity: 1;
+        }
+        .event.left {
+            margin-left: 0;
+            margin-right: auto;
+            text-align: right;
+        }
+        .event.right {
+            margin-left: auto;
+            margin-right: 0;
+            padding-right: 0;
+            padding-left: 2rem;
+            text-align: left;
+        }
+
+        /* Node marker: box-drawing cross glyph */
+        .event::after {
+            content: '┼';
+            position: absolute;
+            top: 0.75rem;
+            font-size: 1.1rem;
+            line-height: 1;
+            color: #c47a30;
+            background: var(--bg);
+            z-index: 10;
+            text-shadow: 0 0 8px rgba(255,140,40,0.4);
+        }
+        .event.left::after { right: -0.55rem; }
+        .event.right::after { left: -0.55rem; }
+        .event:hover::after {
+            color: var(--accent);
+            text-shadow: 0 0 14px rgba(255,140,40,0.6), 0 0 28px rgba(255,140,40,0.3);
+        }
+
+        /* Connector: dash characters instead of a CSS bar */
+        .event::before {
+            content: '───────';
+            position: absolute;
+            top: 0.75rem;
+            font-size: 0.9rem;
+            line-height: 1;
+            white-space: pre;
+            letter-spacing: -1px;
+            color: #2a1a0e;
+            z-index: 5;
+        }
+        .event.left::before { right: 0.1rem; }
+        .event.right::before { left: 0.1rem; }
+
+        /* Card: no box, just a corner label sitting above the title */
+        .tui-card {
+            position: relative;
+        }
+        .tui-card::before {
+            content: '┌─[ ' attr(data-date) ' ]';
+            display: block;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            white-space: pre;
+            line-height: 1.3;
+            margin-bottom: 0.1rem;
+        }
+
+        .event-title {
+            font-size: 1.2rem;
+            font-weight: 400;
+            line-height: 1.3;
+            color: var(--text);
+            text-shadow: var(--glow-text);
+        }
+        .event:hover .event-title {
+            text-shadow: var(--glow-text-hover);
+        }
+
+        /* Detail Panel - TUI box, top+left frame only, drawn from exact-fit rules */
+        .detail-panel {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 380px;
+            max-height: 65vh;
+            background: var(--bg);
+            z-index: 200;
+            display: none;
+            pointer-events: none;
+            font-size: 0.9rem;
+            line-height: 1.2em;
+        }
+        .detail-panel.active,
+        .detail-panel.loading {
+            display: block;
+            pointer-events: all;
+        }
+        .detail-panel::before {
+            content: attr(data-top);
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: var(--text-dim);
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            line-height: 1.2em;
+        }
+        .detail-rule-left {
+            position: absolute;
+            top: 1.2em;
+            bottom: 0;
+            left: 0;
+            width: 1em;
+            color: var(--text-dim);
+            font-family: 'Courier New', monospace;
+            line-height: 1.2em;
+            white-space: pre;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .detail-inner {
+            overflow-y: auto;
+            max-height: 100%;
+            margin: 1.2em 0.5em 0.5em 1em;
+            font-size: 1rem;
+        }
+
+        .detail-header {
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--frame);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .detail-title {
+            font-size: 1.2rem;
+            font-weight: 400;
+            line-height: 1.3;
+            padding-right: 1rem;
+            color: var(--text-bright);
+            text-shadow: 0 0 10px rgba(255,140,40,0.5), 0 0 25px rgba(255,140,40,0.2);
+        }
+        .detail-date {
+            font-size: 1rem;
+            color: var(--text-dim);
+            margin-top: 0.1rem;
+        }
+        .detail-close {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-family: inherit;
+            text-shadow: var(--glow-text);
+            padding: 0;
+        }
+        .detail-close:hover {
+            color: var(--text);
+            text-shadow: var(--glow-text-hover);
+        }
+        .detail-body {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: var(--text-dim);
+            white-space: pre-wrap;
+            text-shadow: 0 0 4px rgba(255,140,40,0.2);
+        }
+        .detail-body p { margin-bottom: 0.5rem; }
+        .detail-placeholder { font-style: italic; opacity: 0.5; }
+        .detail-hint {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--frame);
+            font-size: 0.95rem;
+            color: var(--text-dim);
+        }
+        .detail-hint code {
+            color: var(--accent);
+            text-shadow: 0 0 6px rgba(255,140,40,0.4);
+        }
+        .spinner-text {
+            display: inline-block;
+            color: var(--accent);
+            text-shadow: 0 0 8px rgba(255,140,40,0.4);
+            width: 1ch;
+        }
+
+        .footer-text {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+        .footer-text a {
+            color: var(--accent);
+            text-decoration: none;
+            text-shadow: 0 0 6px rgba(255,140,40,0.3);
+        }
+        .footer-text a:hover {
+            text-shadow: 0 0 12px rgba(255,140,40,0.5);
+        }
+
+        @media (max-width: 768px) {
+            .timeline-line { left: 20px; }
+            .event {
+                width: calc(100% - 55px);
+                margin-left: 55px !important;
+                margin-right: 0 !important;
+                padding-left: 1.5rem !important;
+                padding-right: 0 !important;
+                text-align: left !important;
+            }
+            .event::after { left: -39px !important; right: auto !important; }
+            .event::before { left: -20px !important; right: auto !important; width: 20px; }
+            .era-header { text-align: left; padding-left: 1rem; }
+            .detail-panel {
+                right: 0.75rem; left: 0.75rem; width: auto;
+                top: auto; bottom: 0.75rem;
+                transform: none;
+                max-height: 45vh;
+            }
+            .ctrl-input { width: 100%; }
+            .ctrl-row { flex-direction: column; align-items: stretch; }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header-text">
+            <a href="index.html">&lt; LAGRANGE FREEPORT BBS</a> // HISTORICAL CHRONOLOGY DATABASE
+        </div>
+        <div class="divider">================================================================================</div>
+
+        <div class="controls-area">
+            <div class="ctrl-row">
+                <span class="ctrl-label">&gt; Query:</span>
+                <input type="text" class="ctrl-input" id="search" placeholder="Search records...">
+            </div>
+            <div class="ctrl-row">
+                <span class="ctrl-label">&gt; Era filter:</span>
+                <select class="ctrl-select" id="eraFilter">
+                    <option value="">All Eras</option>
+<option value="Belt Rush">Belt Rush</option><option value="Cislunar Infrastructure">Cislunar Infrastructure</option><option value="Elevator Race">Elevator Race</option><option value="Elevator Strikes">Elevator Strikes</option><option value="First Pacific War">First Pacific War</option><option value="Interregnum">Interregnum</option><option value="Martian Colonisation">Martian Colonisation</option><option value="New Gold Rush">New Gold Rush</option><option value="Reconciliation">Reconciliation</option><option value="Second Interregnum">Second Interregnum</option><option value="Second Pacific War">Second Pacific War</option><option value="Space Race">Space Race</option><option value="The Jovian Colonisation">The Jovian Colonisation</option><option value="Transorbital War">Transorbital War</option>
+                </select>
+                <span class="ctrl-badge" id="countBadge">282 events on file</span>
+            </div>
+        </div>
+
+        <div class="divider">--------------------------------------------------------------------------------</div>
+
+        <div class="timeline-wrapper" id="timeline">
+            <div class="timeline-line"></div>
+        </div>
+
+        <div class="divider">--------------------------------------------------------------------------------</div>
+        <div class="footer-text">
+            Hover record for preview. Click to pin detail. Query <code>details/</code> for data files.
+            <a href="index.html">[ RETURN TO MAIN MENU ]</a>
+        </div>
+        <div class="divider">================================================================================</div>
+    </div>
+
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-rule-left" id="detailRuleLeft"></div>
+        <div class="detail-inner" id="detailInner">
+            <div class="detail-header">
+                <div>
+                    <div class="detail-title" id="detailTitle"></div>
+                    <div class="detail-date" id="detailDate"></div>
+                </div>
+                <button class="detail-close" id="detailClose">[x]</button>
+            </div>
+            <div class="detail-body" id="detailBody"></div>
+        </div>
+    </div>
+
+    <script>
+        const timelineData = [
+  {
+    "date": "1938-01-14",
+    "displayDate": "1938-01-14",
+    "title": "French Arms Shipments Resume",
+    "era": "Interregnum",
+    "slug": "French_Arms_Shipments_Resume"
+  },
+  {
+    "date": "1938-02-01",
+    "displayDate": "1938-02-01",
+    "title": "Republican Victory in Spain",
+    "era": "Interregnum",
+    "slug": "Republican_Victory_in_Spain"
+  },
+  {
+    "date": "1938-03-01",
+    "displayDate": "1938-03-01",
+    "title": "The Anschluss",
+    "era": "Interregnum",
+    "slug": "The_Anschluss"
+  },
+  {
+    "date": "1938-04-22",
+    "displayDate": "1938-04-22",
+    "title": "Republican Victory Parades in Madrid",
+    "era": "Interregnum",
+    "slug": "Republican_Victory_Parades_in_Madrid"
+  },
+  {
+    "date": "1938-06-17",
+    "displayDate": "1938-06-17",
+    "title": "Italy Suspends Major Reinforcements to Spain",
+    "era": "Interregnum",
+    "slug": "Italy_Suspends_Major_Reinforcements_to_Spain"
+  },
+  {
+    "date": "1938-08-05",
+    "displayDate": "1938-08-05",
+    "title": "Czechoslovak General Mobilisation Plans Updated",
+    "era": "Interregnum",
+    "slug": "Czechoslovak_General_Mobilisation_Plans_Updated"
+  },
+  {
+    "date": "1938-09-01",
+    "displayDate": "1938-09-01",
+    "title": "Sudeten Crisis",
+    "era": "Interregnum",
+    "slug": "Sudeten_Crisis"
+  },
+  {
+    "date": "1938-10-01",
+    "displayDate": "1938-10-01",
+    "title": "German Invasion of Czechoslovakia",
+    "era": "Interregnum",
+    "slug": "German_Invasion_of_Czechoslovakia"
+  },
+  {
+    "date": "1938-10-10",
+    "displayDate": "1938-10-10",
+    "title": "Britain and France Declare War",
+    "era": "Interregnum",
+    "slug": "Britain_and_France_Declare_War"
+  },
+  {
+    "date": "1938-12-11",
+    "displayDate": "1938-12-11",
+    "title": "German Ammunition Shortages Become Public",
+    "era": "Interregnum",
+    "slug": "German_Ammunition_Shortages_Become_Public"
+  },
+  {
+    "date": "1939-01-01",
+    "displayDate": "1939",
+    "title": "Western Front Stalemate",
+    "era": "Interregnum",
+    "slug": "Western_Front_Stalemate"
+  },
+  {
+    "date": "1939-03-28",
+    "displayDate": "1939-03-28",
+    "title": "Hitler Is Placed Under Army Guard",
+    "era": "Interregnum",
+    "slug": "Hitler_Is_Placed_Under_Army_Guard"
+  },
+  {
+    "date": "1939-04-01",
+    "displayDate": "1939-04-01",
+    "title": "Berlin Coup",
+    "era": "Interregnum",
+    "slug": "Berlin_Coup"
+  },
+  {
+    "date": "1939-05-19",
+    "displayDate": "1939-05-19",
+    "title": "Czech\u2013German Armistice Front Stabilises",
+    "era": "Interregnum",
+    "slug": "CzechGerman_Armistice_Front_Stabilises"
+  },
+  {
+    "date": "1939-06-01",
+    "displayDate": "1939-06-01",
+    "title": "Armistice of London",
+    "era": "Interregnum",
+    "slug": "Armistice_of_London"
+  },
+  {
+    "date": "1939-11-07",
+    "displayDate": "1939-11-07",
+    "title": "German Constitutional Settlement Announced",
+    "era": "Interregnum",
+    "slug": "German_Constitutional_Settlement_Announced"
+  },
+  {
+    "date": "1940-01-01",
+    "displayDate": "1940",
+    "title": "Germany's Conservative Turn",
+    "era": "Interregnum",
+    "slug": "Germanys_Conservative_Turn"
+  },
+  {
+    "date": "1940-06-15",
+    "displayDate": "1940-06-15",
+    "title": "Franco-German Normalisation Talks Open",
+    "era": "Interregnum",
+    "slug": "Franco-German_Normalisation_Talks_Open"
+  },
+  {
+    "date": "1940-10-02",
+    "displayDate": "1940-10-02",
+    "title": "Spanish Reconstruction Congress Meets in Valencia",
+    "era": "Interregnum",
+    "slug": "Spanish_Reconstruction_Congress_Meets_in_Valencia"
+  },
+  {
+    "date": "1941-01-01",
+    "displayDate": "1941",
+    "title": "Spain's Socialist Reconstruction",
+    "era": "First Pacific War",
+    "slug": "Spains_Socialist_Reconstruction"
+  },
+  {
+    "date": "1941-12-01",
+    "displayDate": "1941-12-01",
+    "title": "Attack on Pearl Harbor",
+    "era": "First Pacific War",
+    "slug": "Attack_on_Pearl_Harbor"
+  },
+  {
+    "date": "1942-03-04",
+    "displayDate": "1942-03-04",
+    "title": "Japanese Southern Strategy Debated in Tokyo",
+    "era": "First Pacific War",
+    "slug": "Japanese_Southern_Strategy_Debated_in_Tokyo"
+  },
+  {
+    "date": "1942-06-01",
+    "displayDate": "1942-06-01",
+    "title": "Battle of Midway",
+    "era": "First Pacific War",
+    "slug": "Battle_of_Midway"
+  },
+  {
+    "date": "1942-10-18",
+    "displayDate": "1942-10-18",
+    "title": "US\u2013Japanese Oil Talks Collapse",
+    "era": "First Pacific War",
+    "slug": "USJapanese_Oil_Talks_Collapse"
+  },
+  {
+    "date": "1943-04-08",
+    "displayDate": "1943-04-08",
+    "title": "Allied Carrier Doctrine Reorganised",
+    "era": "First Pacific War",
+    "slug": "Allied_Carrier_Doctrine_Reorganised"
+  },
+  {
+    "date": "1943-11-01",
+    "displayDate": "1943-11-01",
+    "title": "Battle of Tarawa",
+    "era": "First Pacific War",
+    "slug": "Battle_of_Tarawa"
+  },
+  {
+    "date": "1943-12-19",
+    "displayDate": "1943-12-19",
+    "title": "Tarawa Veterans Form the First Pacific Marine Brigade",
+    "era": "First Pacific War",
+    "slug": "Tarawa_Veterans_Form_the_First_Pacific_Marine_Brigade"
+  },
+  {
+    "date": "1944-06-01",
+    "displayDate": "1944-06-01",
+    "title": "Battle of the Philippine Sea",
+    "era": "First Pacific War",
+    "slug": "Battle_of_the_Philippine_Sea"
+  },
+  {
+    "date": "1944-07-01",
+    "displayDate": "1944-07-01",
+    "title": "Strategic Bombing of Japan",
+    "era": "First Pacific War",
+    "slug": "Strategic_Bombing_of_Japan"
+  },
+  {
+    "date": "1944-08-16",
+    "displayDate": "1944-08-16",
+    "title": "Home Islands Evacuation Plans Leak",
+    "era": "First Pacific War",
+    "slug": "Home_Islands_Evacuation_Plans_Leak"
+  },
+  {
+    "date": "1944-09-01",
+    "displayDate": "1944-09-01",
+    "title": "Blockade of the Home Islands",
+    "era": "First Pacific War",
+    "slug": "Blockade_of_the_Home_Islands"
+  },
+  {
+    "date": "1945-02-01",
+    "displayDate": "1945-02-01",
+    "title": "Soviet Manchurian Offensive",
+    "era": "Second Interregnum",
+    "slug": "Soviet_Manchurian_Offensive"
+  },
+  {
+    "date": "1945-03-22",
+    "displayDate": "1945-03-22",
+    "title": "Soviet\u2013American Korea Boundary Discussions Begin",
+    "era": "Second Interregnum",
+    "slug": "SovietAmerican_Korea_Boundary_Discussions_Begin"
+  },
+  {
+    "date": "1945-04-01",
+    "displayDate": "1945-04-01",
+    "title": "Soviet Forces Enter Korea",
+    "era": "Second Interregnum",
+    "slug": "Soviet_Forces_Enter_Korea"
+  },
+  {
+    "date": "1945-07-01",
+    "displayDate": "1945-07-01",
+    "title": "Allied Landings on Kyushu",
+    "era": "Second Interregnum",
+    "slug": "Allied_Landings_on_Kyushu"
+  },
+  {
+    "date": "1945-08-01",
+    "displayDate": "1945-08-01",
+    "title": "Collapse of the Japanese Government",
+    "era": "First Pacific War",
+    "slug": "Collapse_of_the_Japanese_Government"
+  },
+  {
+    "date": "1945-09-01",
+    "displayDate": "1945-09-01",
+    "title": "Allied Occupation of Japan",
+    "era": "Interregnum",
+    "slug": "Allied_Occupation_of_Japan"
+  },
+  {
+    "date": "1946-03-12",
+    "displayDate": "1946-03-12",
+    "title": "Prague Security Conference",
+    "era": "Second Interregnum",
+    "slug": "Prague_Security_Conference"
+  },
+  {
+    "date": "1946-11-08",
+    "displayDate": "1946-11-08",
+    "title": "Polish Constitution Reaffirmed",
+    "era": "Second Interregnum",
+    "slug": "Polish_Constitution_Reaffirmed"
+  },
+  {
+    "date": "1947-01-01",
+    "displayDate": "1947",
+    "title": "Italy's Fractured Liberalisation",
+    "era": "Second Interregnum",
+    "slug": "Italys_Fractured_Liberalisation"
+  },
+  {
+    "date": "1947-04-21",
+    "displayDate": "1947-04-21",
+    "title": "Italian Monarchy Abolition Referendum",
+    "era": "Second Interregnum",
+    "slug": "Italian_Monarchy_Abolition_Referendum"
+  },
+  {
+    "date": "1947-09-30",
+    "displayDate": "1947-09-30",
+    "title": "Spanish Cooperative Charter Adopted",
+    "era": "Second Interregnum",
+    "slug": "Spanish_Cooperative_Charter_Adopted"
+  },
+  {
+    "date": "1948-01-01",
+    "displayDate": "1948",
+    "title": "Spain, Europe's Socialist State",
+    "era": "Second Interregnum",
+    "slug": "Spain_Europes_Socialist_State"
+  },
+  {
+    "date": "1948-06-14",
+    "displayDate": "1948-06-14",
+    "title": "Berlin Transit Crisis Ends in Negotiation",
+    "era": "Second Interregnum",
+    "slug": "Berlin_Transit_Crisis_Ends_in_Negotiation"
+  },
+  {
+    "date": "1949-01-01",
+    "displayDate": "1949",
+    "title": "CNT-FAI Tensions Within Spain",
+    "era": "Second Interregnum",
+    "slug": "CNT-FAI_Tensions_Within_Spain"
+  },
+  {
+    "date": "1949-02-17",
+    "displayDate": "1949-02-17",
+    "title": "Franco-German Industrial Accord",
+    "era": "Second Interregnum",
+    "slug": "Franco-German_Industrial_Accord"
+  },
+  {
+    "date": "1950-07-03",
+    "displayDate": "1950-07-03",
+    "title": "Korean Neutrality Conference Proposed",
+    "era": "Second Interregnum",
+    "slug": "Korean_Neutrality_Conference_Proposed"
+  },
+  {
+    "date": "1950-12-15",
+    "displayDate": "1950-12-15",
+    "title": "Soviet Buffer-State Doctrine Published",
+    "era": "Second Interregnum",
+    "slug": "Soviet_Buffer-State_Doctrine_Published"
+  },
+  {
+    "date": "1951-01-01",
+    "displayDate": "1951",
+    "title": "Chinese Communist Revolution",
+    "era": "Second Interregnum",
+    "slug": "Chinese_Communist_Revolution"
+  },
+  {
+    "date": "1952-05-26",
+    "displayDate": "1952-05-26",
+    "title": "European Coal and Steel Discussions Open",
+    "era": "Second Interregnum",
+    "slug": "European_Coal_and_Steel_Discussions_Open"
+  },
+  {
+    "date": "1953-01-01",
+    "displayDate": "1953",
+    "title": "Nuclear and Rocketry Research Goes Public",
+    "era": "Second Interregnum",
+    "slug": "Nuclear_and_Rocketry_Research_Goes_Public"
+  },
+  {
+    "date": "1953-10-04",
+    "displayDate": "1953-10-04",
+    "title": "First Civilian Nuclear Reactor Demonstrated",
+    "era": "Second Interregnum",
+    "slug": "First_Civilian_Nuclear_Reactor_Demonstrated"
+  },
+  {
+    "date": "1954-08-19",
+    "displayDate": "1954-08-19",
+    "title": "Spanish Agricultural Mechanisation Plan",
+    "era": "Second Interregnum",
+    "slug": "Spanish_Agricultural_Mechanisation_Plan"
+  },
+  {
+    "date": "1955-01-01",
+    "displayDate": "1955",
+    "title": "Cold War Brinkmanship",
+    "era": "Second Interregnum",
+    "slug": "Cold_War_Brinkmanship"
+  },
+  {
+    "date": "1955-06-02",
+    "displayDate": "1955-06-02",
+    "title": "Vienna Security Talks End Without Agreement",
+    "era": "Second Interregnum",
+    "slug": "Vienna_Security_Talks_End_Without_Agreement"
+  },
+  {
+    "date": "1956-02-14",
+    "displayDate": "1956-02-14",
+    "title": "Second Generation Soviet Missiles Revealed",
+    "era": "Second Interregnum",
+    "slug": "Second_Generation_Soviet_Missiles_Revealed"
+  },
+  {
+    "date": "1956-10-29",
+    "displayDate": "1956-10-29",
+    "title": "Suez Crisis",
+    "era": "Second Interregnum",
+    "slug": "Suez_Crisis"
+  },
+  {
+    "date": "1957-01-01",
+    "displayDate": "1957",
+    "title": "Simultaneous Sputnik Launches",
+    "era": "Space Race",
+    "slug": "Simultaneous_Sputnik_Launches"
+  },
+  {
+    "date": "1958-01-01",
+    "displayDate": "1958",
+    "title": "Founding of the State Committee for Cosmonautics",
+    "era": "Space Race",
+    "slug": "Founding_of_the_State_Committee_for_Cosmonautics"
+  },
+  {
+    "date": "1958-01-01",
+    "displayDate": "1958",
+    "title": "Founding of the Compagnie Spatiale Continentale",
+    "era": "Space Race",
+    "slug": "Founding_of_the_Compagnie_Spatiale_Continentale"
+  },
+  {
+    "date": "1958-01-01",
+    "displayDate": "1958",
+    "title": "Founding of NASA",
+    "era": "Space Race",
+    "slug": "Founding_of_NASA"
+  },
+  {
+    "date": "1959-03-17",
+    "displayDate": "1959-03-17",
+    "title": "First Continental Tracking Network Opens",
+    "era": "Space Race",
+    "slug": "First_Continental_Tracking_Network_Opens"
+  },
+  {
+    "date": "1959-11-22",
+    "displayDate": "1959-11-22",
+    "title": "German Rocket Research Service Established",
+    "era": "Space Race",
+    "slug": "German_Rocket_Research_Service_Established"
+  },
+  {
+    "date": "1960-01-01",
+    "displayDate": "1960",
+    "title": "First Man in Space",
+    "era": "Space Race",
+    "slug": "First_Man_in_Space"
+  },
+  {
+    "date": "1960-09-03",
+    "displayDate": "1960-09-03",
+    "title": "First Weather Satellite Forecasts Issued",
+    "era": "Space Race",
+    "slug": "First_Weather_Satellite_Forecasts_Issued"
+  },
+  {
+    "date": "1961-01-01",
+    "displayDate": "1961",
+    "title": "Suez Crisis",
+    "era": "Space Race",
+    "slug": "Suez_Crisis"
+  },
+  {
+    "date": "1961-01-01",
+    "displayDate": "1961",
+    "title": "US and Compact Reach Orbit",
+    "era": "Space Race",
+    "slug": "US_and_Compact_Reach_Orbit"
+  },
+  {
+    "date": "1961-10-11",
+    "displayDate": "1961-10-11",
+    "title": "Compact Ministers Approve Joint Launch Vehicle",
+    "era": "Space Race",
+    "slug": "Compact_Ministers_Approve_Joint_Launch_Vehicle"
+  },
+  {
+    "date": "1962-01-01",
+    "displayDate": "1962",
+    "title": "Cuban Revolution",
+    "era": "Space Race",
+    "slug": "Cuban_Revolution"
+  },
+  {
+    "date": "1962-08-17",
+    "displayDate": "1962-08-17",
+    "title": "Cuban Missile Crisis",
+    "era": "Space Race",
+    "slug": "Cuban_Missile_Crisis"
+  },
+  {
+    "date": "1963-01-01",
+    "displayDate": "1963",
+    "title": "Indochina War Continues",
+    "era": "Space Race",
+    "slug": "Indochina_War_Continues"
+  },
+  {
+    "date": "1963-07-06",
+    "displayDate": "1963-07-06",
+    "title": "Limited Test Ban Signed",
+    "era": "Space Race",
+    "slug": "Limited_Test_Ban_Signed"
+  },
+  {
+    "date": "1964-04-18",
+    "displayDate": "1964-04-18",
+    "title": "Soviet Heavy-Lift Engine Accident",
+    "era": "Space Race",
+    "slug": "Soviet_Heavy-Lift_Engine_Accident"
+  },
+  {
+    "date": "1965-01-01",
+    "displayDate": "1965",
+    "title": "Germany's Contested Alliance Status",
+    "era": "Space Race",
+    "slug": "Germanys_Contested_Alliance_Status"
+  },
+  {
+    "date": "1965-01-01",
+    "displayDate": "1965",
+    "title": "First Spacewalks and Docking Tests",
+    "era": "Space Race",
+    "slug": "First_Spacewalks_and_Docking_Tests"
+  },
+  {
+    "date": "1965-11-02",
+    "displayDate": "1965-11-02",
+    "title": "First Long-Duration Orbital Workshop",
+    "era": "Space Race",
+    "slug": "First_Long-Duration_Orbital_Workshop"
+  },
+  {
+    "date": "1966-01-01",
+    "displayDate": "1966",
+    "title": "Civil Rights Movement",
+    "era": "Space Race",
+    "slug": "Civil_Rights_Movement"
+  },
+  {
+    "date": "1967-06-21",
+    "displayDate": "1967-06-21",
+    "title": "Lunar Communications Standard Agreed",
+    "era": "Space Race",
+    "slug": "Lunar_Communications_Standard_Agreed"
+  },
+  {
+    "date": "1968-01-01",
+    "displayDate": "1968",
+    "title": "Soviet Moon Landing",
+    "era": "Space Race",
+    "slug": "Soviet_Moon_Landing"
+  },
+  {
+    "date": "1969-01-01",
+    "displayDate": "1969",
+    "title": "US Moon Landing",
+    "era": "Space Race",
+    "slug": "US_Moon_Landing"
+  },
+  {
+    "date": "1969-12-14",
+    "displayDate": "1969-12-14",
+    "title": "Post-Landing Lunar Science Treaty",
+    "era": "Space Race",
+    "slug": "Post-Landing_Lunar_Science_Treaty"
+  },
+  {
+    "date": "1970-06-09",
+    "displayDate": "1970-06-09",
+    "title": "Compact Adopts Permanent Lunar Presence Doctrine",
+    "era": "Space Race",
+    "slug": "Compact_Adopts_Permanent_Lunar_Presence_Doctrine"
+  },
+  {
+    "date": "1971-01-01",
+    "displayDate": "1971",
+    "title": "The Compact Reaches Lunar Orbit",
+    "era": "Space Race",
+    "slug": "The_Compact_Reaches_Lunar_Orbit"
+  },
+  {
+    "date": "1971-01-01",
+    "displayDate": "1971",
+    "title": "Chinese and Soviet Escalation in Indochina",
+    "era": "Second Pacific War",
+    "slug": "Chinese_and_Soviet_Escalation_in_Indochina"
+  },
+  {
+    "date": "1971-03-14",
+    "displayDate": "1971-03-14",
+    "title": "Shanghai Talks Collapse",
+    "era": "Second Pacific War",
+    "slug": "Shanghai_Talks_Collapse"
+  },
+  {
+    "date": "1972-01-19",
+    "displayDate": "1972-01-19",
+    "title": "Soviet Emergency Airlift to Indochina",
+    "era": "Second Pacific War",
+    "slug": "Soviet_Emergency_Airlift_to_Indochina"
+  },
+  {
+    "date": "1972-08-31",
+    "displayDate": "1972-08-31",
+    "title": "Battle of the Mekong Corridor",
+    "era": "Second Pacific War",
+    "slug": "Battle_of_the_Mekong_Corridor"
+  },
+  {
+    "date": "1973-01-01",
+    "displayDate": "1973",
+    "title": "Britain Drawn In by Treaty",
+    "era": "Second Pacific War",
+    "slug": "Britain_Drawn_In_by_Treaty"
+  },
+  {
+    "date": "1973-01-01",
+    "displayDate": "1973",
+    "title": "United States Enters the War",
+    "era": "Second Pacific War",
+    "slug": "United_States_Enters_the_War"
+  },
+  {
+    "date": "1973-06-11",
+    "displayDate": "1973-06-11",
+    "title": "US Carrier Groups Enter the South China Sea",
+    "era": "Second Pacific War",
+    "slug": "US_Carrier_Groups_Enter_the_South_China_Sea"
+  },
+  {
+    "date": "1974-04-27",
+    "displayDate": "1974-04-27",
+    "title": "British Pacific Bases Reopened",
+    "era": "Second Pacific War",
+    "slug": "British_Pacific_Bases_Reopened"
+  },
+  {
+    "date": "1975-09-06",
+    "displayDate": "1975-09-06",
+    "title": "First Chinese Nuclear Alert",
+    "era": "Second Pacific War",
+    "slug": "First_Chinese_Nuclear_Alert"
+  },
+  {
+    "date": "1976-01-01",
+    "displayDate": "1976",
+    "title": "Soviet Pressure on the Buffer States",
+    "era": "Second Pacific War",
+    "slug": "Soviet_Pressure_on_the_Buffer_States"
+  },
+  {
+    "date": "1976-05-18",
+    "displayDate": "1976-05-18",
+    "title": "Prague Mobilisation Crisis",
+    "era": "Second Pacific War",
+    "slug": "Prague_Mobilisation_Crisis"
+  },
+  {
+    "date": "1977-01-01",
+    "displayDate": "1977",
+    "title": "Germany Joins the Allied War Effort",
+    "era": "Second Pacific War",
+    "slug": "Germany_Joins_the_Allied_War_Effort"
+  },
+  {
+    "date": "1977-10-03",
+    "displayDate": "1977-10-03",
+    "title": "German Expeditionary Corps Forms",
+    "era": "Second Pacific War",
+    "slug": "German_Expeditionary_Corps_Forms"
+  },
+  {
+    "date": "1978-01-01",
+    "displayDate": "1978",
+    "title": "Trench Deadlock",
+    "era": "Second Pacific War",
+    "slug": "Trench_Deadlock"
+  },
+  {
+    "date": "1978-03-29",
+    "displayDate": "1978-03-29",
+    "title": "Burma Declares Armed Neutrality",
+    "era": "Second Pacific War",
+    "slug": "Burma_Declares_Armed_Neutrality"
+  },
+  {
+    "date": "1979-01-01",
+    "displayDate": "1979",
+    "title": "First Battlefield Use of Recon Satellites",
+    "era": "Second Pacific War",
+    "slug": "First_Battlefield_Use_of_Recon_Satellites"
+  },
+  {
+    "date": "1979-07-21",
+    "displayDate": "1979-07-21",
+    "title": "Reconnaissance Satellites Begin Continuous Coverage",
+    "era": "Second Pacific War",
+    "slug": "Reconnaissance_Satellites_Begin_Continuous_Coverage"
+  },
+  {
+    "date": "1980-11-02",
+    "displayDate": "1980-11-02",
+    "title": "Winter Offensive Fails at Nanning",
+    "era": "Second Pacific War",
+    "slug": "Winter_Offensive_Fails_at_Nanning"
+  },
+  {
+    "date": "1981-06-01",
+    "displayDate": "1981-06-01",
+    "title": "Nuclear Strike on Nanning",
+    "era": "Second Pacific War",
+    "slug": "Nuclear_Strike_on_Nanning"
+  },
+  {
+    "date": "1982-02-14",
+    "displayDate": "1982-02-14",
+    "title": "Ceasefire Border Commission Established",
+    "era": "Reconciliation",
+    "slug": "Ceasefire_Border_Commission_Established"
+  },
+  {
+    "date": "1982-11-03",
+    "displayDate": "1982-11-03",
+    "title": "Veterans' Housing Crisis Becomes a Political Issue",
+    "era": "Reconciliation",
+    "slug": "Veterans_Housing_Crisis_Becomes_a_Political_Issue"
+  },
+  {
+    "date": "1983-01-01",
+    "displayDate": "1983",
+    "title": "Human-in-the-Loop Doctrine Adopted",
+    "era": "Reconciliation",
+    "slug": "Human-in-the-Loop_Doctrine_Adopted"
+  },
+  {
+    "date": "1983-01-01",
+    "displayDate": "1983",
+    "title": "Multilateral Arms-Control Treaty",
+    "era": "Reconciliation",
+    "slug": "Multilateral_Arms-Control_Treaty"
+  },
+  {
+    "date": "1984-01-01",
+    "displayDate": "1984",
+    "title": "Field-Repairable Tech Becomes Doctrine",
+    "era": "Reconciliation",
+    "slug": "Field-Repairable_Tech_Becomes_Doctrine"
+  },
+  {
+    "date": "1984-06-22",
+    "displayDate": "1984-06-22",
+    "title": "First Joint Orbital Debris Treaty",
+    "era": "Reconciliation",
+    "slug": "First_Joint_Orbital_Debris_Treaty"
+  },
+  {
+    "date": "1985-01-01",
+    "displayDate": "1985",
+    "title": "Japan's Quiet Industrial Rise",
+    "era": "Reconciliation",
+    "slug": "Japans_Quiet_Industrial_Rise"
+  },
+  {
+    "date": "1985-01-01",
+    "displayDate": "1985",
+    "title": "Atlantic-Continental Alliance Formalised",
+    "era": "Reconciliation",
+    "slug": "Atlantic-Continental_Alliance_Formalised"
+  },
+  {
+    "date": "1986-03-17",
+    "displayDate": "1986-03-17",
+    "title": "German Heavy Launch Programme Restarts",
+    "era": "Reconciliation",
+    "slug": "German_Heavy_Launch_Programme_Restarts"
+  },
+  {
+    "date": "1987-01-01",
+    "displayDate": "1987",
+    "title": "Space Programmes Resume",
+    "era": "Reconciliation",
+    "slug": "Space_Programmes_Resume"
+  },
+  {
+    "date": "1988-09-09",
+    "displayDate": "1988-09-09",
+    "title": "Commercial Satellite Repair Consortium Founded",
+    "era": "Reconciliation",
+    "slug": "Commercial_Satellite_Repair_Consortium_Founded"
+  },
+  {
+    "date": "1989-04-25",
+    "displayDate": "1989-04-25",
+    "title": "ASAT Moratorium Collapses",
+    "era": "Reconciliation",
+    "slug": "ASAT_Moratorium_Collapses"
+  },
+  {
+    "date": "1990-03-01",
+    "displayDate": "1990-03-01",
+    "title": "ASAT Strike Blinds a Constellation",
+    "era": "Reconciliation",
+    "slug": "ASAT_Strike_Blinds_a_Constellation"
+  },
+  {
+    "date": "1990-08-01",
+    "displayDate": "1990-08-01",
+    "title": "The Orbital War Begins",
+    "era": "Reconciliation",
+    "slug": "The_Orbital_War_Begins"
+  },
+  {
+    "date": "1990-12-02",
+    "displayDate": "1990-12-02",
+    "title": "Orbital Interception Incident",
+    "era": "Reconciliation",
+    "slug": "Orbital_Interception_Incident"
+  },
+  {
+    "date": "1991-05-01",
+    "displayDate": "1991-05-01",
+    "title": "Kessler Cascade Cripples Low Earth Orbit",
+    "era": "Reconciliation",
+    "slug": "Kessler_Cascade_Cripples_Low_Earth_Orbit"
+  },
+  {
+    "date": "1991-08-18",
+    "displayDate": "1991-08-18",
+    "title": "First Large Fragment-Tracking Network Installed",
+    "era": "Reconciliation",
+    "slug": "First_Large_Fragment-Tracking_Network_Installed"
+  },
+  {
+    "date": "1992-04-07",
+    "displayDate": "1992-04-07",
+    "title": "Emergency Debris Salvage Mission",
+    "era": "Reconciliation",
+    "slug": "Emergency_Debris_Salvage_Mission"
+  },
+  {
+    "date": "1993-08-26",
+    "displayDate": "1993-08-26",
+    "title": "International Elevator Standards Commission Formed",
+    "era": "Reconciliation",
+    "slug": "International_Elevator_Standards_Commission_Formed"
+  },
+  {
+    "date": "1995-05-12",
+    "displayDate": "1995-05-12",
+    "title": "Carbon Nanotube Production Becomes Commercial",
+    "era": "Elevator Race",
+    "slug": "Carbon_Nanotube_Production_Becomes_Commercial"
+  },
+  {
+    "date": "1996-10-04",
+    "displayDate": "1996-10-04",
+    "title": "Equatorial Launch Rights Dispute",
+    "era": "Elevator Race",
+    "slug": "Equatorial_Launch_Rights_Dispute"
+  },
+  {
+    "date": "1998-01-01",
+    "displayDate": "1998",
+    "title": "Elevator Materials Science Funded",
+    "era": "Elevator Race",
+    "slug": "Elevator_Materials_Science_Funded"
+  },
+  {
+    "date": "1999-02-18",
+    "displayDate": "1999-02-18",
+    "title": "First Full-Length Elevator Material Test",
+    "era": "Elevator Race",
+    "slug": "First_Full-Length_Elevator_Material_Test"
+  },
+  {
+    "date": "2000-07-21",
+    "displayDate": "2000-07-21",
+    "title": "Pan-African Elevator Infrastructure Conference",
+    "era": "Elevator Race",
+    "slug": "Pan-African_Elevator_Infrastructure_Conference"
+  },
+  {
+    "date": "2001-01-01",
+    "displayDate": "2001",
+    "title": "Six National Elevator Programmes Launch",
+    "era": "Elevator Race",
+    "slug": "Six_National_Elevator_Programmes_Launch"
+  },
+  {
+    "date": "2002-11-16",
+    "displayDate": "2002-11-16",
+    "title": "Soviet Elevator Consortium Nationalised",
+    "era": "Elevator Race",
+    "slug": "Soviet_Elevator_Consortium_Nationalised"
+  },
+  {
+    "date": "2003-01-01",
+    "displayDate": "2003",
+    "title": "Formation of the Oceanic Partnership",
+    "era": "Elevator Race",
+    "slug": "Formation_of_the_Oceanic_Partnership"
+  },
+  {
+    "date": "2003-08-09",
+    "displayDate": "2003-08-09",
+    "title": "Oceanic Insurance Pool Established",
+    "era": "Elevator Race",
+    "slug": "Oceanic_Insurance_Pool_Established"
+  },
+  {
+    "date": "2004-01-01",
+    "displayDate": "2004",
+    "title": "US Secures Elevator Site in Ecuador",
+    "era": "Elevator Race",
+    "slug": "US_Secures_Elevator_Site_in_Ecuador"
+  },
+  {
+    "date": "2005-01-01",
+    "displayDate": "2005",
+    "title": "Compact Secures Elevator Site in Gabon",
+    "era": "Elevator Race",
+    "slug": "Compact_Secures_Elevator_Site_in_Gabon"
+  },
+  {
+    "date": "2005-09-27",
+    "displayDate": "2005-09-27",
+    "title": "Ecuador Security Zone Declared",
+    "era": "Elevator Race",
+    "slug": "Ecuador_Security_Zone_Declared"
+  },
+  {
+    "date": "2006-01-01",
+    "displayDate": "2006",
+    "title": "Soviets Secure Elevator Site in the Congo",
+    "era": "Elevator Race",
+    "slug": "Soviets_Secure_Elevator_Site_in_the_Congo"
+  },
+  {
+    "date": "2007-01-01",
+    "displayDate": "2007",
+    "title": "Oceanic Partnership Secures Site in Kiribati",
+    "era": "Elevator Race",
+    "slug": "Oceanic_Partnership_Secures_Site_in_Kiribati"
+  },
+  {
+    "date": "2007-04-13",
+    "displayDate": "2007-04-13",
+    "title": "China Announces Indonesian Counterweight Network",
+    "era": "Elevator Race",
+    "slug": "China_Announces_Indonesian_Counterweight_Network"
+  },
+  {
+    "date": "2008-01-01",
+    "displayDate": "2008",
+    "title": "China Secures Elevator Site in Indonesia",
+    "era": "Elevator Race",
+    "slug": "China_Secures_Elevator_Site_in_Indonesia"
+  },
+  {
+    "date": "2009-02-02",
+    "displayDate": "2009-02-02",
+    "title": "First Autonomous Elevator Climbers Certified",
+    "era": "Elevator Race",
+    "slug": "First_Autonomous_Elevator_Climbers_Certified"
+  },
+  {
+    "date": "2010-01-01",
+    "displayDate": "2010",
+    "title": "Chartered Operating Companies Introduced",
+    "era": "Elevator Race",
+    "slug": "Chartered_Operating_Companies_Introduced"
+  },
+  {
+    "date": "2011-06-07",
+    "displayDate": "2011-06-07",
+    "title": "First Commercial Elevator Cargo Contract",
+    "era": "Cislunar Infrastructure",
+    "slug": "First_Commercial_Elevator_Cargo_Contract"
+  },
+  {
+    "date": "2012-12-19",
+    "displayDate": "2012-12-19",
+    "title": "Lunar Prospecting Survey Begins",
+    "era": "Cislunar Infrastructure",
+    "slug": "Lunar_Prospecting_Survey_Begins"
+  },
+  {
+    "date": "2014-03-28",
+    "displayDate": "2014-03-28",
+    "title": "Compact Orbital Tug Programme Announced",
+    "era": "Cislunar Infrastructure",
+    "slug": "Compact_Orbital_Tug_Programme_Announced"
+  },
+  {
+    "date": "2015-01-01",
+    "displayDate": "2015",
+    "title": "US Space Elevator Opens in Ecuador",
+    "era": "Cislunar Infrastructure",
+    "slug": "US_Space_Elevator_Opens_in_Ecuador"
+  },
+  {
+    "date": "2016-08-15",
+    "displayDate": "2016-08-15",
+    "title": "US Elevator Traffic Doubles",
+    "era": "Cislunar Infrastructure",
+    "slug": "US_Elevator_Traffic_Doubles"
+  },
+  {
+    "date": "2017-11-02",
+    "displayDate": "2017-11-02",
+    "title": "First Permanent Lunar Construction Crew",
+    "era": "Cislunar Infrastructure",
+    "slug": "First_Permanent_Lunar_Construction_Crew"
+  },
+  {
+    "date": "2018-01-01",
+    "displayDate": "2018",
+    "title": "Chartered Companies Become Standard Practice",
+    "era": "Cislunar Infrastructure",
+    "slug": "Chartered_Companies_Become_Standard_Practice"
+  },
+  {
+    "date": "2019-05-26",
+    "displayDate": "2019-05-26",
+    "title": "Soviet Lunar Mining Charter",
+    "era": "Cislunar Infrastructure",
+    "slug": "Soviet_Lunar_Mining_Charter"
+  },
+  {
+    "date": "2020-01-01",
+    "displayDate": "2020",
+    "title": "Founding of the Soviet Lunar Base",
+    "era": "Cislunar Infrastructure",
+    "slug": "Founding_of_the_Soviet_Lunar_Base"
+  },
+  {
+    "date": "2021-01-01",
+    "displayDate": "2021",
+    "title": "Founding of the Compact Lunar Base",
+    "era": "Cislunar Infrastructure",
+    "slug": "Founding_of_the_Compact_Lunar_Base"
+  },
+  {
+    "date": "2021-09-04",
+    "displayDate": "2021-09-04",
+    "title": "Commercial Lunar Water Extraction Begins",
+    "era": "Cislunar Infrastructure",
+    "slug": "Commercial_Lunar_Water_Extraction_Begins"
+  },
+  {
+    "date": "2022-01-01",
+    "displayDate": "2022",
+    "title": "Founding of the US Lunar Base",
+    "era": "Cislunar Infrastructure",
+    "slug": "Founding_of_the_US_Lunar_Base"
+  },
+  {
+    "date": "2023-06-18",
+    "displayDate": "2023-06-18",
+    "title": "Earth\u2013Moon Freight Tariff Convention",
+    "era": "Cislunar Infrastructure",
+    "slug": "EarthMoon_Freight_Tariff_Convention"
+  },
+  {
+    "date": "2024-10-11",
+    "displayDate": "2024-10-11",
+    "title": "First Inter-Base Lunar Emergency Rescue",
+    "era": "Cislunar Infrastructure",
+    "slug": "First_Inter-Base_Lunar_Emergency_Rescue"
+  },
+  {
+    "date": "2026-04-30",
+    "displayDate": "2026-04-30",
+    "title": "Cislunar Navigation Standard Adopted",
+    "era": "Cislunar Infrastructure",
+    "slug": "Cislunar_Navigation_Standard_Adopted"
+  },
+  {
+    "date": "2028-12-08",
+    "displayDate": "2028-12-08",
+    "title": "First Private Cislunar Settlement Charter",
+    "era": "Martian Colonisation",
+    "slug": "First_Private_Cislunar_Settlement_Charter"
+  },
+  {
+    "date": "2031-05-06",
+    "displayDate": "2031-05-06",
+    "title": "First Self-Repairing Mars Probe",
+    "era": "Martian Colonisation",
+    "slug": "First_Self-Repairing_Mars_Probe"
+  },
+  {
+    "date": "2032-01-01",
+    "displayDate": "2032",
+    "title": "Closed-Loop Life Support Trials",
+    "era": "Martian Colonisation",
+    "slug": "Closed-Loop_Life_Support_Trials"
+  },
+  {
+    "date": "2034-09-18",
+    "displayDate": "2034-09-18",
+    "title": "Mars Sample Return Quarantine Accord",
+    "era": "Martian Colonisation",
+    "slug": "Mars_Sample_Return_Quarantine_Accord"
+  },
+  {
+    "date": "2036-01-01",
+    "displayDate": "2036",
+    "title": "Radiation Shielding Prototypes",
+    "era": "Martian Colonisation",
+    "slug": "Radiation_Shielding_Prototypes"
+  },
+  {
+    "date": "2038-02-11",
+    "displayDate": "2038-02-11",
+    "title": "Deep-Space Relay Chain Completed",
+    "era": "Martian Colonisation",
+    "slug": "Deep-Space_Relay_Chain_Completed"
+  },
+  {
+    "date": "2041-07-23",
+    "displayDate": "2041-07-23",
+    "title": "First Mars Teleoperated Excavation Crew",
+    "era": "Martian Colonisation",
+    "slug": "First_Mars_Teleoperated_Excavation_Crew"
+  },
+  {
+    "date": "2043-01-01",
+    "displayDate": "2043",
+    "title": "Soviet Crewed Landing on Mars",
+    "era": "Martian Colonisation",
+    "slug": "Soviet_Crewed_Landing_on_Mars"
+  },
+  {
+    "date": "2045-11-30",
+    "displayDate": "2045-11-30",
+    "title": "Mars Landing Pad Network Begins",
+    "era": "Martian Colonisation",
+    "slug": "Mars_Landing_Pad_Network_Begins"
+  },
+  {
+    "date": "2047-01-01",
+    "displayDate": "2047",
+    "title": "US Crewed Landing on Mars",
+    "era": "Martian Colonisation",
+    "slug": "US_Crewed_Landing_on_Mars"
+  },
+  {
+    "date": "2048-01-01",
+    "displayDate": "2048",
+    "title": "Compact Crewed Landing on Mars",
+    "era": "Martian Colonisation",
+    "slug": "Compact_Crewed_Landing_on_Mars"
+  },
+  {
+    "date": "2049-03-14",
+    "displayDate": "2049-03-14",
+    "title": "First Child Born After Extended Artificial-G Gravity Pregnancy Trial",
+    "era": "Martian Colonisation",
+    "slug": "First_Child_Born_After_Extended_Artificial-G_Gravity_Pregnancy_Trial"
+  },
+  {
+    "date": "2050-01-01",
+    "displayDate": "2050",
+    "title": "First Permanent Mars Settlements",
+    "era": "Martian Colonisation",
+    "slug": "First_Permanent_Mars_Settlements"
+  },
+  {
+    "date": "2052-08-20",
+    "displayDate": "2052-08-20",
+    "title": "Martian Ice Claims Trigger Legal Dispute",
+    "era": "Martian Colonisation",
+    "slug": "Martian_Ice_Claims_Trigger_Legal_Dispute"
+  },
+  {
+    "date": "2053-01-01",
+    "displayDate": "2053",
+    "title": "Founding of PTB Aeromax",
+    "era": "Martian Colonisation",
+    "slug": "Founding_of_PTB_Aeromax"
+  },
+  {
+    "date": "2055-01-01",
+    "displayDate": "2055",
+    "title": "First Crewed Venus Flights",
+    "era": "Martian Colonisation",
+    "slug": "First_Crewed_Venus_Flights"
+  },
+  {
+    "date": "2057-01-17",
+    "displayDate": "2057-01-17",
+    "title": "Mars Worker Rotation Limits Introduced",
+    "era": "Martian Colonisation",
+    "slug": "Mars_Worker_Rotation_Limits_Introduced"
+  },
+  {
+    "date": "2058-01-01",
+    "displayDate": "2058",
+    "title": "Contract Labour Becomes Standard on Mars",
+    "era": "Martian Colonisation",
+    "slug": "Contract_Labour_Becomes_Standard_on_Mars"
+  },
+  {
+    "date": "2060-01-01",
+    "displayDate": "2060",
+    "title": "Japan's Occupation Formally Ends",
+    "era": "Martian Colonisation",
+    "slug": "Japans_Occupation_Formally_Ends"
+  },
+  {
+    "date": "2061-04-05",
+    "displayDate": "2061-04-05",
+    "title": "Venus Aerostat Accident Kills Seventeen",
+    "era": "Martian Colonisation",
+    "slug": "Venus_Aerostat_Accident_Kills_Seventeen"
+  },
+  {
+    "date": "2063-10-29",
+    "displayDate": "2063-10-29",
+    "title": "First Mars Labour Tribunal Opens",
+    "era": "Martian Colonisation",
+    "slug": "First_Mars_Labour_Tribunal_Opens"
+  },
+  {
+    "date": "2065-01-01",
+    "displayDate": "2065",
+    "title": "Multi-Year Labour Contracts Spread",
+    "era": "Martian Colonisation",
+    "slug": "Multi-Year_Labour_Contracts_Spread"
+  },
+  {
+    "date": "2065-01-01",
+    "displayDate": "2065",
+    "title": "Postwar Generation Ages Out of Leadership",
+    "era": "Martian Colonisation",
+    "slug": "Postwar_Generation_Ages_Out_of_Leadership"
+  },
+  {
+    "date": "2068-06-12",
+    "displayDate": "2068-06-12",
+    "title": "Mars Property Bubble Peaks",
+    "era": "Martian Colonisation",
+    "slug": "Mars_Property_Bubble_Peaks"
+  },
+  {
+    "date": "2070-01-01",
+    "displayDate": "2070",
+    "title": "Permanent Aerostat Cities Rise on Venus",
+    "era": "Martian Colonisation",
+    "slug": "Permanent_Aerostat_Cities_Rise_on_Venus"
+  },
+  {
+    "date": "2070-01-01",
+    "displayDate": "2070",
+    "title": "Gabon-Congo Elevator Rivalry Simmers",
+    "era": "Martian Colonisation",
+    "slug": "Gabon-Congo_Elevator_Rivalry_Simmers"
+  },
+  {
+    "date": "2072-09-04",
+    "displayDate": "2072-09-04",
+    "title": "Venus Atmospheric Metals Industry Begins",
+    "era": "Martian Colonisation",
+    "slug": "Venus_Atmospheric_Metals_Industry_Begins"
+  },
+  {
+    "date": "2076-01-01",
+    "displayDate": "2076",
+    "title": "First Large-Scale Enclosed Habitats on Mars",
+    "era": "Martian Colonisation",
+    "slug": "First_Large-Scale_Enclosed_Habitats_on_Mars"
+  },
+  {
+    "date": "2078-01-25",
+    "displayDate": "2078-01-25",
+    "title": "Mars-born Population Becomes Politically Significant",
+    "era": "Martian Colonisation",
+    "slug": "Mars-born_Population_Becomes_Politically_Significant"
+  },
+  {
+    "date": "2081-11-16",
+    "displayDate": "2081-11-16",
+    "title": "Mars Habitat Power Rationing Crisis",
+    "era": "Martian Colonisation",
+    "slug": "Mars_Habitat_Power_Rationing_Crisis"
+  },
+  {
+    "date": "2082-01-01",
+    "displayDate": "2082",
+    "title": "Earth's Wealthy Buy Mars Property",
+    "era": "Martian Colonisation",
+    "slug": "Earths_Wealthy_Buy_Mars_Property"
+  },
+  {
+    "date": "2086-07-07",
+    "displayDate": "2086-07-07",
+    "title": "First Interplanetary Labour Federation Congress",
+    "era": "Martian Colonisation",
+    "slug": "First_Interplanetary_Labour_Federation_Congress"
+  },
+  {
+    "date": "2088-12-19",
+    "displayDate": "2088-12-19",
+    "title": "Off-World Citizenship Petition Reaches Earth Courts",
+    "era": "Martian Colonisation",
+    "slug": "Off-World_Citizenship_Petition_Reaches_Earth_Courts"
+  },
+  {
+    "date": "2091-04-03",
+    "displayDate": "2091-04-03",
+    "title": "First Secure Laser Relay Between Earth and Mars",
+    "era": "Transorbital War",
+    "slug": "First_Secure_Laser_Relay_Between_Earth_and_Mars"
+  },
+  {
+    "date": "2092-01-19",
+    "displayDate": "2092-01-19",
+    "title": "Mars Port Authority Declares Emergency",
+    "era": "Transorbital War",
+    "slug": "Mars_Port_Authority_Declares_Emergency"
+  },
+  {
+    "date": "2092-03-01",
+    "displayDate": "2092-03-01",
+    "title": "Mars Labour Uprising",
+    "era": "Transorbital War",
+    "slug": "Mars_Labour_Uprising"
+  },
+  {
+    "date": "2092-04-15",
+    "displayDate": "2092-04-15",
+    "title": "Earth-Mars Communications Cut for Eleven Hours",
+    "era": "Transorbital War",
+    "slug": "Earth-Mars_Communications_Cut_for_Eleven_Hours"
+  },
+  {
+    "date": "2092-05-01",
+    "displayDate": "2092-05-01",
+    "title": "Rebels Seize Mars Infrastructure",
+    "era": "Transorbital War",
+    "slug": "Rebels_Seize_Mars_Infrastructure"
+  },
+  {
+    "date": "2092-07-01",
+    "displayDate": "2092-07-01",
+    "title": "Soviet Union Backs the Mars Rebels",
+    "era": "Transorbital War",
+    "slug": "Soviet_Union_Backs_the_Mars_Rebels"
+  },
+  {
+    "date": "2093-01-01",
+    "displayDate": "2093",
+    "title": "First Neural-Interface Mech Piloting",
+    "era": "Transorbital War",
+    "slug": "First_Neural-Interface_Mech_Piloting"
+  },
+  {
+    "date": "2093-06-22",
+    "displayDate": "2093-06-22",
+    "title": "Autonomous Interception Ban Enters Force",
+    "era": "Transorbital War",
+    "slug": "Autonomous_Interception_Ban_Enters_Force"
+  },
+  {
+    "date": "2094-01-01",
+    "displayDate": "2094",
+    "title": "Emotional-Blunting Protocols Introduced",
+    "era": "Transorbital War",
+    "slug": "Emotional-Blunting_Protocols_Introduced"
+  },
+  {
+    "date": "2094-09-07",
+    "displayDate": "2094-09-07",
+    "title": "First Battlefield Neural Feedback Casualties",
+    "era": "Transorbital War",
+    "slug": "First_Battlefield_Neural_Feedback_Casualties"
+  },
+  {
+    "date": "2095-01-01",
+    "displayDate": "2095",
+    "title": "Light-Lag Stalemate",
+    "era": "Transorbital War",
+    "slug": "Light-Lag_Stalemate"
+  },
+  {
+    "date": "2096-02-28",
+    "displayDate": "2096-02-28",
+    "title": "Hohmann Transfer Convoy Doctrine Published",
+    "era": "Transorbital War",
+    "slug": "Hohmann_Transfer_Convoy_Doctrine_Published"
+  },
+  {
+    "date": "2097-10-11",
+    "displayDate": "2097-10-11",
+    "title": "Martian Reconstruction Authority Established",
+    "era": "Transorbital War",
+    "slug": "Martian_Reconstruction_Authority_Established"
+  },
+  {
+    "date": "2098-01-01",
+    "displayDate": "2098",
+    "title": "Hohmann Windows Dictate Strategy",
+    "era": "Transorbital War",
+    "slug": "Hohmann_Windows_Dictate_Strategy"
+  },
+  {
+    "date": "2099-05-09",
+    "displayDate": "2099-05-09",
+    "title": "Earth-Mars Communications Treaty Signed",
+    "era": "Transorbital War",
+    "slug": "Earth-Mars_Communications_Treaty_Signed"
+  },
+  {
+    "date": "2100-01-01",
+    "displayDate": "2100",
+    "title": "Mars Labour Concessions Won",
+    "era": "Transorbital War",
+    "slug": "Mars_Labour_Concessions_Won"
+  },
+  {
+    "date": "2100-08-23",
+    "displayDate": "2100-08-23",
+    "title": "First Off-World Reparations Tribunal",
+    "era": "Transorbital War",
+    "slug": "First_Off-World_Reparations_Tribunal"
+  },
+  {
+    "date": "2101-01-01",
+    "displayDate": "2101",
+    "title": "Earth Grants Off-World Autonomy",
+    "era": "Transorbital War",
+    "slug": "Earth_Grants_Off-World_Autonomy"
+  },
+  {
+    "date": "2108-01-01",
+    "displayDate": "2108",
+    "title": "Founding of Han-Mueller Biogenics",
+    "era": "Belt Rush",
+    "slug": "Founding_of_Han-Mueller_Biogenics"
+  },
+  {
+    "date": "2109-01-01",
+    "displayDate": "2109",
+    "title": "LIN Opticene Incorporated",
+    "era": "Belt Rush",
+    "slug": "LIN_Opticene_Incorporated"
+  },
+  {
+    "date": "2110-03-19",
+    "displayDate": "2110-03-19",
+    "title": "First Commercial Asteroid Prospecting Swarm",
+    "era": "Belt Rush",
+    "slug": "First_Commercial_Asteroid_Prospecting_Swarm"
+  },
+  {
+    "date": "2111-12-02",
+    "displayDate": "2111-12-02",
+    "title": "Belt Navigation Beacons Go Online",
+    "era": "Belt Rush",
+    "slug": "Belt_Navigation_Beacons_Go_Online"
+  },
+  {
+    "date": "2112-01-01",
+    "displayDate": "2112",
+    "title": "Founding of Novagen",
+    "era": "Belt Rush",
+    "slug": "Founding_of_Novagen"
+  },
+  {
+    "date": "2113-07-28",
+    "displayDate": "2113-07-28",
+    "title": "First Independent Belt Habitat Charter",
+    "era": "Belt Rush",
+    "slug": "First_Independent_Belt_Habitat_Charter"
+  },
+  {
+    "date": "2116-01-01",
+    "displayDate": "2116",
+    "title": "Belt Extraction Begins Ungoverned",
+    "era": "Belt Rush",
+    "slug": "Belt_Extraction_Begins_Ungoverned"
+  },
+  {
+    "date": "2117-04-13",
+    "displayDate": "2117-04-13",
+    "title": "Water-Ice Claim Rush Begins",
+    "era": "Belt Rush",
+    "slug": "Water-Ice_Claim_Rush_Begins"
+  },
+  {
+    "date": "2118-01-01",
+    "displayDate": "2118",
+    "title": "Founding of the Free Belt Company",
+    "era": "Belt Rush",
+    "slug": "Founding_of_the_Free_Belt_Company"
+  },
+  {
+    "date": "2119-01-01",
+    "displayDate": "2119",
+    "title": "Founding of the Soviet State Mining Collective",
+    "era": "Belt Rush",
+    "slug": "Founding_of_the_Soviet_State_Mining_Collective"
+  },
+  {
+    "date": "2120-09-06",
+    "displayDate": "2120-09-06",
+    "title": "Soviet and Japanese Convoy Dispute",
+    "era": "Belt Rush",
+    "slug": "Soviet_and_Japanese_Convoy_Dispute"
+  },
+  {
+    "date": "2122-01-31",
+    "displayDate": "2122-01-31",
+    "title": "First Beltwide Labour Strike",
+    "era": "Belt Rush",
+    "slug": "First_Beltwide_Labour_Strike"
+  },
+  {
+    "date": "2124-06-18",
+    "displayDate": "2124-06-18",
+    "title": "Emergency Tether Standard Adopted",
+    "era": "Belt Rush",
+    "slug": "Emergency_Tether_Standard_Adopted"
+  },
+  {
+    "date": "2125-01-01",
+    "displayDate": "2125",
+    "title": "Belt Labour Disputes Resolved by Force",
+    "era": "Belt Rush",
+    "slug": "Belt_Labour_Disputes_Resolved_by_Force"
+  },
+  {
+    "date": "2126-01-01",
+    "displayDate": "2126",
+    "title": "Neural-Interface Security Goes Corporate",
+    "era": "Belt Rush",
+    "slug": "Neural-Interface_Security_Goes_Corporate"
+  },
+  {
+    "date": "2128-11-04",
+    "displayDate": "2128-11-04",
+    "title": "Kessler Extraction Default Triggers Asset Seizures",
+    "era": "Belt Rush",
+    "slug": "Kessler_Extraction_Default_Triggers_Asset_Seizures"
+  },
+  {
+    "date": "2130-01-01",
+    "displayDate": "2130",
+    "title": "Collapse of Kessler Extraction",
+    "era": "Belt Rush",
+    "slug": "Collapse_of_Kessler_Extraction"
+  },
+  {
+    "date": "2131-03-15",
+    "displayDate": "2131-03-15",
+    "title": "Free Belt Courts Recognised by Three Earth States",
+    "era": "Belt Rush",
+    "slug": "Free_Belt_Courts_Recognised_by_Three_Earth_States"
+  },
+  {
+    "date": "2134-08-22",
+    "displayDate": "2134-08-22",
+    "title": "First Born-on-the-Belt Generation Registers Citizenship",
+    "era": "Belt Rush",
+    "slug": "First_Born-on-the-Belt_Generation_Registers_Citizenship"
+  },
+  {
+    "date": "2137-02-09",
+    "displayDate": "2137-02-09",
+    "title": "Japanese Refining Consortium Faces Antitrust Inquiry",
+    "era": "Belt Rush",
+    "slug": "Japanese_Refining_Consortium_Faces_Antitrust_Inquiry"
+  },
+  {
+    "date": "2144-05-17",
+    "displayDate": "2144-05-17",
+    "title": "Jovian Probe Convoy Arrives at Jupiter",
+    "era": "The Jovian Colonisation",
+    "slug": "Jovian_Probe_Convoy_Arrives_at_Jupiter"
+  },
+  {
+    "date": "2147-01-01",
+    "displayDate": "2147",
+    "title": "Robotic Survey of Jupiter",
+    "era": "The Jovian Colonisation",
+    "slug": "Robotic_Survey_of_Jupiter"
+  },
+  {
+    "date": "2149-08-03",
+    "displayDate": "2149-08-03",
+    "title": "Ganymede Ice Port Opens",
+    "era": "The Jovian Colonisation",
+    "slug": "Ganymede_Ice_Port_Opens"
+  },
+  {
+    "date": "2152-01-01",
+    "displayDate": "2152",
+    "title": "Io Extraction Stays Automated",
+    "era": "The Jovian Colonisation",
+    "slug": "Io_Extraction_Stays_Automated"
+  },
+  {
+    "date": "2154-11-28",
+    "displayDate": "2154-11-28",
+    "title": "First Io Maintenance Robots Lost to Radiation",
+    "era": "The Jovian Colonisation",
+    "slug": "First_Io_Maintenance_Robots_Lost_to_Radiation"
+  },
+  {
+    "date": "2157-01-01",
+    "displayDate": "2157",
+    "title": "Europa Planetary-Protection Debate",
+    "era": "The Jovian Colonisation",
+    "slug": "Europa_Planetary-Protection_Debate"
+  },
+  {
+    "date": "2159-03-12",
+    "displayDate": "2159-03-12",
+    "title": "Europa Quarantine Zone Established",
+    "era": "The Jovian Colonisation",
+    "slug": "Europa_Quarantine_Zone_Established"
+  },
+  {
+    "date": "2162-01-01",
+    "displayDate": "2162",
+    "title": "Ganymede Becomes the Jovian Capital",
+    "era": "The Jovian Colonisation",
+    "slug": "Ganymede_Becomes_the_Jovian_Capital"
+  },
+  {
+    "date": "2164-07-07",
+    "displayDate": "2164-07-07",
+    "title": "Callisto Accords Standardise Free-Port Law",
+    "era": "The Jovian Colonisation",
+    "slug": "Callisto_Accords_Standardise_Free-Port_Law"
+  },
+  {
+    "date": "2168-01-01",
+    "displayDate": "2168",
+    "title": "Callisto Becomes a Neutral Free Port",
+    "era": "The Jovian Colonisation",
+    "slug": "Callisto_Becomes_a_Neutral_Free_Port"
+  },
+  {
+    "date": "2169-12-01",
+    "displayDate": "2169-12-01",
+    "title": "Titan Methane Shipping Route Surveyed",
+    "era": "The Jovian Colonisation",
+    "slug": "Titan_Methane_Shipping_Route_Surveyed"
+  },
+  {
+    "date": "2172-04-18",
+    "displayDate": "2172-04-18",
+    "title": "First Permanent Saturn Relay",
+    "era": "The Jovian Colonisation",
+    "slug": "First_Permanent_Saturn_Relay"
+  },
+  {
+    "date": "2175-09-25",
+    "displayDate": "2175-09-25",
+    "title": "Enceladus Scientific Claims Dispute",
+    "era": "The Jovian Colonisation",
+    "slug": "Enceladus_Scientific_Claims_Dispute"
+  },
+  {
+    "date": "2177-01-01",
+    "displayDate": "2177",
+    "title": "Titan Becomes Saturn's Hub",
+    "era": "The Jovian Colonisation",
+    "slug": "Titan_Becomes_Saturns_Hub"
+  },
+  {
+    "date": "2179-02-14",
+    "displayDate": "2179-02-14",
+    "title": "Jovian Coalition Election Creates Civilian Secretariat",
+    "era": "The Jovian Colonisation",
+    "slug": "Jovian_Coalition_Election_Creates_Civilian_Secretariat"
+  },
+  {
+    "date": "2180-01-01",
+    "displayDate": "2180",
+    "title": "Enceladus Subsurface-Ocean Tension",
+    "era": "The Jovian Colonisation",
+    "slug": "Enceladus_Subsurface-Ocean_Tension"
+  },
+  {
+    "date": "2180-01-01",
+    "displayDate": "2180",
+    "title": "Founding of the Jovian Coalition",
+    "era": "The Jovian Colonisation",
+    "slug": "Founding_of_the_Jovian_Coalition"
+  },
+  {
+    "date": "2184-06-30",
+    "displayDate": "2184-06-30",
+    "title": "Ring Material Prospectors Organise",
+    "era": "The Jovian Colonisation",
+    "slug": "Ring_Material_Prospectors_Organise"
+  },
+  {
+    "date": "2189-10-06",
+    "displayDate": "2189-10-06",
+    "title": "First Saturnine Long-Haul Freight Treaty",
+    "era": "The Jovian Colonisation",
+    "slug": "First_Saturnine_Long-Haul_Freight_Treaty"
+  },
+  {
+    "date": "2193-03-21",
+    "displayDate": "2193-03-21",
+    "title": "Earth Banks Begin Taking Jovian Resource Collateral",
+    "era": "The Jovian Colonisation",
+    "slug": "Earth_Banks_Begin_Taking_Jovian_Resource_Collateral"
+  },
+  {
+    "date": "2195-01-01",
+    "displayDate": "2195",
+    "title": "Earth Grows Dependent on Belt Resources",
+    "era": "Elevator Strikes",
+    "slug": "Earth_Grows_Dependent_on_Belt_Resources"
+  },
+  {
+    "date": "2198-05-14",
+    "displayDate": "2198-05-14",
+    "title": "Earth Commodity Markets Crash on Jovian Supply Rumours",
+    "era": "Elevator Strikes",
+    "slug": "Earth_Commodity_Markets_Crash_on_Jovian_Supply_Rumours"
+  },
+  {
+    "date": "2201-09-02",
+    "displayDate": "2201-09-02",
+    "title": "Jovian Mining Leagues Establish Joint Defence Patrols",
+    "era": "Elevator Strikes",
+    "slug": "Jovian_Mining_Leagues_Establish_Joint_Defence_Patrols"
+  },
+  {
+    "date": "2204-03-17",
+    "displayDate": "2204-03-17",
+    "title": "First Belt Insurance Consortium Fails",
+    "era": "Elevator Strikes",
+    "slug": "First_Belt_Insurance_Consortium_Fails"
+  },
+  {
+    "date": "2207-11-26",
+    "displayDate": "2207-11-26",
+    "title": "Earth Lifts First Selective Sanctions",
+    "era": "Elevator Strikes",
+    "slug": "Earth_Lifts_First_Selective_Sanctions"
+  },
+  {
+    "date": "2210-01-01",
+    "displayDate": "2210",
+    "title": "US Seizes Big Four Assets on Earth",
+    "era": "Elevator Strikes",
+    "slug": "US_Seizes_Big_Four_Assets_on_Earth"
+  },
+  {
+    "date": "2211-01-01",
+    "displayDate": "2211",
+    "title": "Jovian Coalition Becomes a Military Alliance",
+    "era": "Elevator Strikes",
+    "slug": "Jovian_Coalition_Becomes_a_Military_Alliance"
+  },
+  {
+    "date": "2212-06-08",
+    "displayDate": "2212-06-08",
+    "title": "Jovian Convoy Captains Refuse Earth Inspection",
+    "era": "Elevator Strikes",
+    "slug": "Jovian_Convoy_Captains_Refuse_Earth_Inspection"
+  },
+  {
+    "date": "2213-01-01",
+    "displayDate": "2213",
+    "title": "Jovian Embargo Begins",
+    "era": "Elevator Strikes",
+    "slug": "Jovian_Embargo_Begins"
+  },
+  {
+    "date": "2214-01-01",
+    "displayDate": "2214",
+    "title": "Earth Blockades Belt Shipping Lanes",
+    "era": "Elevator Strikes",
+    "slug": "Earth_Blockades_Belt_Shipping_Lanes"
+  },
+  {
+    "date": "2215-08-29",
+    "displayDate": "2215-08-29",
+    "title": "First Elevator Cable Sabotage Confirmed",
+    "era": "Elevator Strikes",
+    "slug": "First_Elevator_Cable_Sabotage_Confirmed"
+  },
+  {
+    "date": "2217-01-01",
+    "displayDate": "2217",
+    "title": "Fighting Concentrates in the Belt",
+    "era": "Elevator Strikes",
+    "slug": "Fighting_Concentrates_in_the_Belt"
+  },
+  {
+    "date": "2218-02-13",
+    "displayDate": "2218-02-13",
+    "title": "Emergency Civilian Evacuation from the Belt",
+    "era": "Elevator Strikes",
+    "slug": "Emergency_Civilian_Evacuation_from_the_Belt"
+  },
+  {
+    "date": "2219-04-01",
+    "displayDate": "2219-04-01",
+    "title": "Destruction of the Ecuador Space Elevator",
+    "era": "Elevator Strikes",
+    "slug": "Destruction_of_the_Ecuador_Space_Elevator"
+  },
+  {
+    "date": "2219-06-01",
+    "displayDate": "2219-06-01",
+    "title": "Destruction of the Gabon Space Elevator",
+    "era": "Elevator Strikes",
+    "slug": "Destruction_of_the_Gabon_Space_Elevator"
+  },
+  {
+    "date": "2220-01-01",
+    "displayDate": "2220",
+    "title": "Earth Capitulates",
+    "era": "Elevator Strikes",
+    "slug": "Earth_Capitulates"
+  },
+  {
+    "date": "2221-05-05",
+    "displayDate": "2221-05-05",
+    "title": "Postwar Elevator Insurance Authority Created",
+    "era": "Elevator Strikes",
+    "slug": "Postwar_Elevator_Insurance_Authority_Created"
+  },
+  {
+    "date": "2222-01-01",
+    "displayDate": "2222",
+    "title": "Earth Recognises Jovian Sovereignty",
+    "era": "Elevator Strikes",
+    "slug": "Earth_Recognises_Jovian_Sovereignty"
+  },
+  {
+    "date": "2224-12-17",
+    "displayDate": "2224-12-17",
+    "title": "Jovian Demobilisation Begins",
+    "era": "Elevator Strikes",
+    "slug": "Jovian_Demobilisation_Begins"
+  },
+  {
+    "date": "2225-01-01",
+    "displayDate": "2225",
+    "title": "Soviet and Oceanic Elevators Become Chokepoints",
+    "era": "Elevator Strikes",
+    "slug": "Soviet_and_Oceanic_Elevators_Become_Chokepoints"
+  },
+  {
+    "date": "2227-03-08",
+    "displayDate": "2227-03-08",
+    "title": "Earth Reconstruction Bonds Issued",
+    "era": "Elevator Strikes",
+    "slug": "Earth_Reconstruction_Bonds_Issued"
+  },
+  {
+    "date": "2230-01-01",
+    "displayDate": "2230",
+    "title": "Founding of the Saturnine Compact",
+    "era": "Elevator Strikes",
+    "slug": "Founding_of_the_Saturnine_Compact"
+  },
+  {
+    "date": "2230-01-01",
+    "displayDate": "2230",
+    "title": "Congo Elevator Becomes Earth's Most Defended Site",
+    "era": "Elevator Strikes",
+    "slug": "Congo_Elevator_Becomes_Earths_Most_Defended_Site"
+  },
+  {
+    "date": "2232-09-14",
+    "displayDate": "2232-09-14",
+    "title": "Saturnine Compact Fleet Declares Neutrality",
+    "era": "Elevator Strikes",
+    "slug": "Saturnine_Compact_Fleet_Declares_Neutrality"
+  },
+  {
+    "date": "2242-05-11",
+    "displayDate": "2242-05-11",
+    "title": "First Uranian Relay Buoy Deployed",
+    "era": "New Gold Rush",
+    "slug": "First_Uranian_Relay_Buoy_Deployed"
+  },
+  {
+    "date": "2244-10-03",
+    "displayDate": "2244-10-03",
+    "title": "Outer-System Navigation Standard Adopted",
+    "era": "New Gold Rush",
+    "slug": "Outer-System_Navigation_Standard_Adopted"
+  },
+  {
+    "date": "2245-01-01",
+    "displayDate": "2245",
+    "title": "Robotic Survey of Uranus and Neptune",
+    "era": "New Gold Rush",
+    "slug": "Robotic_Survey_of_Uranus_and_Neptune"
+  },
+  {
+    "date": "2247-02-27",
+    "displayDate": "2247-02-27",
+    "title": "First Autonomous Neptune Prospector",
+    "era": "New Gold Rush",
+    "slug": "First_Autonomous_Neptune_Prospector"
+  },
+  {
+    "date": "2250-01-01",
+    "displayDate": "2250",
+    "title": "Robotic Survey of the Kuiper Belt",
+    "era": "New Gold Rush",
+    "slug": "Robotic_Survey_of_the_Kuiper_Belt"
+  },
+  {
+    "date": "2251-06-16",
+    "displayDate": "2251-06-16",
+    "title": "Kuiper Transit Insurance Becomes a Major Industry",
+    "era": "New Gold Rush",
+    "slug": "Kuiper_Transit_Insurance_Becomes_a_Major_Industry"
+  },
+  {
+    "date": "2253-12-02",
+    "displayDate": "2253-12-02",
+    "title": "First Closed-Cycle Deep-System Habitat",
+    "era": "New Gold Rush",
+    "slug": "First_Closed-Cycle_Deep-System_Habitat"
+  },
+  {
+    "date": "2255-01-01",
+    "displayDate": "2255",
+    "title": "First Crewed Outer-System Missions",
+    "era": "New Gold Rush",
+    "slug": "First_Crewed_Outer-System_Missions"
+  },
+  {
+    "date": "2256-08-21",
+    "displayDate": "2256-08-21",
+    "title": "Outer-System Labour Charter Adopted",
+    "era": "New Gold Rush",
+    "slug": "Outer-System_Labour_Charter_Adopted"
+  },
+  {
+    "date": "2258-01-01",
+    "displayDate": "2258",
+    "title": "Daughter Colonies Push Outward",
+    "era": "New Gold Rush",
+    "slug": "Daughter_Colonies_Push_Outward"
+  },
+  {
+    "date": "2259-04-07",
+    "displayDate": "2259-04-07",
+    "title": "First Daughter Colony Requests Independent Taxation",
+    "era": "New Gold Rush",
+    "slug": "First_Daughter_Colony_Requests_Independent_Taxation"
+  },
+  {
+    "date": "2260-11-19",
+    "displayDate": "2260-11-19",
+    "title": "System Census Begins",
+    "era": "New Gold Rush",
+    "slug": "System_Census_Begins"
+  },
+  {
+    "date": "2261-01-01",
+    "displayDate": "2261",
+    "title": "Present Day",
+    "era": "New Gold Rush",
+    "slug": "Present_Day"
+  }
+];
+
+        const timeline = document.getElementById('timeline');
+        const detailPanel = document.getElementById('detailPanel');
+        const detailTitle = document.getElementById('detailTitle');
+        const detailDate = document.getElementById('detailDate');
+        const detailBody = document.getElementById('detailBody');
+        const detailClose = document.getElementById('detailClose');
+        const detailInner = document.getElementById('detailInner');
+        const detailRuleLeft = document.getElementById('detailRuleLeft');
+        const searchInput = document.getElementById('search');
+        const eraFilter = document.getElementById('eraFilter');
+        const countBadge = document.getElementById('countBadge');
+        const timelineLine = document.querySelector('.timeline-line');
+
+        let pinnedSlug = null;
+        let abortController = null;
+        let spinnerTimer = null;
+
+        // ---- Row-height probe, used for both the timeline column and scroll stepping ----
+        function measureRowPx(el) {
+            const probe = document.createElement('span');
+            probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;';
+            probe.textContent = '│';
+            (el || document.body).appendChild(probe);
+            const h = probe.getBoundingClientRect().height || 16;
+            probe.remove();
+            return h;
+        }
+
+        // ---- Center timeline column: JS-generated │ characters, sized to actual height ----
+        function renderCenterColumn() {
+            const rowPx = 16; // matches .timeline-line line-height
+            const h = timeline.scrollHeight;
+            const rows = Math.max(1, Math.ceil(h / rowPx));
+            timelineLine.textContent = new Array(rows).fill('│').join('\n');
+        }
+
+        // ---- Detail panel: exact-fit box-drawing frame (top + left only), computed from real pixel size ----
+        function sizeDetailFrame() {
+            if (detailPanel.style.display === 'none' || getComputedStyle(detailPanel).display === 'none') return;
+
+            const FRAME_FONT = "'Courier New', monospace";
+            const charProbe = document.createElement('span');
+            charProbe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font-family:' + FRAME_FONT + ';font-size:0.9rem;';
+            charProbe.textContent = '─';
+            detailPanel.appendChild(charProbe);
+            const charW = charProbe.getBoundingClientRect().width || 8;
+            const rowH = charProbe.getBoundingClientRect().height || 16;
+            charProbe.remove();
+
+            const cols = Math.max(10, Math.floor(detailPanel.clientWidth / charW));
+
+            const label = '┌─[ RECORD DETAIL ]';
+            const topDashes = Math.max(1, cols - label.length - 1);
+            detailPanel.setAttribute('data-top', label + '─'.repeat(topDashes) + '┐');
+
+            const ruleH = detailRuleLeft.clientHeight;
+            const ruleRows = Math.max(1, Math.floor(ruleH / rowH));
+            detailRuleLeft.textContent = new Array(ruleRows).fill('│').join('\n');
+        }
+
+        // ---- Text spinner: |/-\ cycled via setInterval, no CSS animation ----
+        function startSpinner() {
+            stopSpinner();
+            const frames = ['|', '/', '-', '\\'];
+            let i = 0;
+            detailBody.innerHTML = '<span class="spinner-text" id="spinnerChar">|</span> RETRIEVING RECORD...';
+            const spinnerChar = document.getElementById('spinnerChar');
+            spinnerTimer = setInterval(() => {
+                i = (i + 1) % frames.length;
+                if (spinnerChar) spinnerChar.textContent = frames[i];
+            }, 120);
+        }
+        function stopSpinner() {
+            if (spinnerTimer) { clearInterval(spinnerTimer); spinnerTimer = null; }
+        }
+
+        function groupByEra(data) {
+            const groups = {};
+            data.forEach(ev => {
+                if (!groups[ev.era]) groups[ev.era] = [];
+                groups[ev.era].push(ev);
+            });
+            return groups;
+        }
+
+        function renderTimeline(filterEra, filterText) {
+            filterEra = filterEra || '';
+            filterText = filterText || '';
+            const line = timeline.querySelector('.timeline-line');
+            timeline.innerHTML = '';
+            timeline.appendChild(line);
+
+            let filtered = timelineData;
+            if (filterEra) filtered = filtered.filter(e => e.era === filterEra);
+            if (filterText) {
+                const lower = filterText.toLowerCase();
+                filtered = filtered.filter(e =>
+                    e.title.toLowerCase().includes(lower) ||
+                    e.date.includes(lower) ||
+                    e.era.toLowerCase().includes(lower)
+                );
+            }
+
+            countBadge.textContent = filtered.length + ' event' + (filtered.length !== 1 ? 's' : '') + ' on file';
+
+            if (filtered.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'no-results';
+                empty.textContent = '// NO MATCHING RECORDS';
+                timeline.appendChild(empty);
+                return;
+            }
+
+            const groups = groupByEra(filtered);
+            let globalIndex = 0;
+
+            Object.entries(groups).forEach(([era, events]) => {
+                const section = document.createElement('div');
+                section.className = 'era-section';
+                section.dataset.era = era;
+
+                const header = document.createElement('div');
+                header.className = 'era-header';
+                header.textContent = '=== ' + era.toUpperCase() + ' ===';
+                section.appendChild(header);
+
+                events.forEach((ev) => {
+                    const side = globalIndex % 2 === 0 ? 'left' : 'right';
+                    globalIndex++;
+
+                    const eventEl = document.createElement('div');
+                    eventEl.className = 'event ' + side;
+                    eventEl.dataset.slug = ev.slug;
+                    eventEl.dataset.date = ev.date;
+                    eventEl.dataset.title = ev.title;
+
+                    const card = document.createElement('div');
+                    card.className = 'tui-card';
+                    card.setAttribute('data-date', ev.displayDate);
+
+                    const titleEl = document.createElement('div');
+                    titleEl.className = 'event-title';
+                    titleEl.textContent = ev.title;
+
+                    card.appendChild(titleEl);
+                    eventEl.appendChild(card);
+                    section.appendChild(eventEl);
+
+                    eventEl.addEventListener('mouseenter', () => {
+                        if (!pinnedSlug) loadDetail(ev.slug, ev.title, ev.displayDate, false);
+                    });
+                    eventEl.addEventListener('mouseleave', () => {
+                        if (!pinnedSlug) hideDetail();
+                    });
+                    eventEl.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (pinnedSlug === ev.slug) {
+                            pinnedSlug = null;
+                            hideDetail();
+                        } else {
+                            pinnedSlug = ev.slug;
+                            loadDetail(ev.slug, ev.title, ev.displayDate, true);
+                        }
+                    });
+                });
+
+                timeline.appendChild(section);
+            });
+
+            setupObserver();
+            renderCenterColumn();
+        }
+
+        async function loadDetail(slug, title, date, pin) {
+            if (abortController) abortController.abort();
+            abortController = new AbortController();
+
+            detailTitle.textContent = title;
+            detailDate.textContent = date;
+            detailPanel.className = 'detail-panel loading';
+            sizeDetailFrame();
+            detailInner.scrollTop = 0;
+            startSpinner();
+
+            try {
+                const response = await fetch('details/' + slug + '.txt', { signal: abortController.signal });
+                if (response.ok) {
+                    const text = await response.text();
+                    const paragraphs = text.trim().split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+                    stopSpinner();
+                    detailBody.innerHTML = paragraphs;
+                } else {
+                    throw new Error('Not found');
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+                stopSpinner();
+                detailBody.innerHTML = '<p class="detail-placeholder">// NO DATA ON FILE</p><div class="detail-hint">Create: <code>details/' + slug + '.txt</code></div>';
+            }
+
+            detailPanel.className = 'detail-panel active';
+            sizeDetailFrame();
+        }
+
+        function hideDetail() {
+            stopSpinner();
+            detailPanel.className = 'detail-panel';
+            detailPanel.removeAttribute('data-top');
+            if (abortController) { abortController.abort(); abortController = null; }
+        }
+
+        detailClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pinnedSlug = null;
+            hideDetail();
+        });
+
+        document.addEventListener('click', () => {
+            pinnedSlug = null;
+            hideDetail();
+        });
+        detailPanel.addEventListener('click', (e) => { e.stopPropagation(); });
+
+        function setupObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+            document.querySelectorAll('.event').forEach(el => observer.observe(el));
+        }
+
+        searchInput.addEventListener('input', (e) => { renderTimeline(eraFilter.value, e.target.value); });
+        eraFilter.addEventListener('change', (e) => { renderTimeline(e.target.value, searchInput.value); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { pinnedSlug = null; hideDetail(); } });
+
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                renderCenterColumn();
+                sizeDetailFrame();
+            }, 100);
+        });
+
+        // ---- Line-by-line stepped scroll: wheel + keys, targets page or detail panel ----
+        (function setupSteppedScroll() {
+            const ROW = measureRowPx();
+            const PAGE_JUMP = ROW * 10;
+
+            function scrollTarget(e) {
+                if (detailPanel.classList.contains('active') || detailPanel.classList.contains('loading')) {
+                    if (e.target && e.target.closest && e.target.closest('.detail-panel')) return detailInner;
+                }
+                return null; // null = page
+            }
+
+            function step(target, delta) {
+                if (target) target.scrollTop += delta;
+                else window.scrollBy(0, delta);
+            }
+
+            window.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                step(scrollTarget(e), e.deltaY > 0 ? ROW : -ROW);
+            }, { passive: false });
+
+            window.addEventListener('keydown', (e) => {
+                const active = document.activeElement;
+                const typing = active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
+                if (typing) return;
+
+                let delta = 0;
+                if (e.key === 'ArrowDown') delta = ROW;
+                else if (e.key === 'ArrowUp') delta = -ROW;
+                else if (e.key === 'PageDown') delta = PAGE_JUMP;
+                else if (e.key === 'PageUp') delta = -PAGE_JUMP;
+                else if (e.key === ' ') delta = PAGE_JUMP;
+                else return;
+
+                e.preventDefault();
+                const target = (detailPanel.classList.contains('active') || detailPanel.classList.contains('loading')) ? detailInner : null;
+                step(target, delta);
+            });
+        })();
+
+        renderTimeline();
+    </script>
+</body>
+</html>
