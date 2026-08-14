@@ -905,9 +905,9 @@
   {
     "date": "1961-01-01",
     "displayDate": "1961",
-    "title": "Suez Crisis",
+    "title": "Aden Protectorate Crisis",
     "era": "Space Race",
-    "slug": "Suez_Crisis"
+    "slug": "Aden_Protectorate_Crisis"
   },
   {
     "date": "1961-01-01",
@@ -933,9 +933,9 @@
   {
     "date": "1962-08-17",
     "displayDate": "1962-08-17",
-    "title": "Cuban Missile Crisis",
+    "title": "Caribbean Fleet Standoff",
     "era": "Space Race",
-    "slug": "Cuban_Missile_Crisis"
+    "slug": "Caribbean_Fleet_Standoff"
   },
   {
     "date": "1963-01-01",
@@ -947,9 +947,9 @@
   {
     "date": "1963-07-06",
     "displayDate": "1963-07-06",
-    "title": "Limited Test Ban Signed",
+    "title": "Continental Rocket Testing Accord",
     "era": "Space Race",
-    "slug": "Limited_Test_Ban_Signed"
+    "slug": "Continental_Rocket_Testing_Accord"
   },
   {
     "date": "1964-04-18",
@@ -1160,6 +1160,13 @@
     "title": "Nuclear Strike on Nanning",
     "era": "Second Pacific War",
     "slug": "Nuclear_Strike_on_Nanning"
+  },
+  {
+    "date": "1981-07-01",
+    "displayDate": "1981-07-01",
+    "title": "Emergency Ceasefire",
+    "era": "Second Pacific War",
+    "slug": "Emergency_Ceasefire"
   },
   {
     "date": "1982-02-14",
@@ -2439,6 +2446,7 @@
         let pinnedSlug = null;
         let abortController = null;
         let spinnerTimer = null;
+        let blurbsCache = null;
 
         // ---- Row-height probe, used for both the timeline column and scroll stepping ----
         function measureRowPx(el) {
@@ -2608,15 +2616,20 @@
             startSpinner();
 
             try {
-                const response = await fetch('details/' + slug + '.txt', { signal: abortController.signal });
-                if (response.ok) {
-                    const text = await response.text();
-                    const paragraphs = text.trim().split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
-                    stopSpinner();
-                    detailBody.innerHTML = paragraphs;
+                let text = null;
+                if (blurbsCache && blurbsCache[slug]) {
+                    text = blurbsCache[slug];
                 } else {
-                    throw new Error('Not found');
+                    const response = await fetch('details/' + slug + '.txt', { signal: abortController.signal });
+                    if (response.ok) {
+                        text = await response.text();
+                    } else {
+                        throw new Error('Not found');
+                    }
                 }
+                const paragraphs = text.trim().split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+                stopSpinner();
+                detailBody.innerHTML = paragraphs;
             } catch (err) {
                 if (err.name === 'AbortError') return;
                 stopSpinner();
@@ -2709,7 +2722,11 @@
             });
         })();
 
-        renderTimeline();
+        fetch('blurbs.json')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data) blurbsCache = data.blurbs; })
+            .catch(() => {})
+            .finally(() => renderTimeline());
     </script>
 </body>
 </html>
